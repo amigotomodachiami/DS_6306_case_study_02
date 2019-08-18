@@ -167,10 +167,6 @@ set.seed(123)
 train_ind <- sample(seq_len(nrow(emp7)), size = sample_size)
 train_emp7 <- emp7[train_ind, ]
 test_emp7 <- emp7[-train_ind, ]
-#x <- train_emp7[c(-22)] #exclude monthly income
-#y <- train_emp7$Attrition
-#y
-test_emp7
 
 ################### naive bayes:Attrition ##################
 library(e1071)

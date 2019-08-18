@@ -1,0 +1,243 @@
+---
+title: "Case_Study_02"
+author: "Wailun Chung"
+date: "8/18/2019"
+output: html_document
+---
+
+
+# Case Study 2
+
+## 1. Import and plot department and job roles vs Attrition:
+
+```{r}
+emp = read.csv("/Users/wailunchung/Documents/GitHub/DS_6306_case_study_02/CaseStudy2-data.csv",header = TRUE)
+
+library(ggplot2)
+library(plyr)
+library(dplyr)
+
+#Attrition Rate
+#Department - y
+dpt_freq <- ddply(emp, .(emp$Department,emp$Attrition), nrow)
+names(dpt_freq)<-c('Department','Attrition','count')
+ggplot(dpt_freq, aes(x=Department,y=count,fill=Attrition))+ggtitle("Attrition by Department") + geom_bar(stat = "identity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#JobRole -y
+rol_freq <- ddply(emp, .(emp$JobRole,emp$Attrition), nrow)
+names(rol_freq)<-c('JobRole','Attrition','count')
+ggplot(rol_freq, aes(x=JobRole,y=count,fill=Attrition)) +
+  ggtitle("Attrition by Job Role")+ 
+  geom_bar(stat = "identity")+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),plot.title = element_text(hjust = 0.5))
+```
+
+## 2. Clean Data
+
+```{r}
+#************************************************
+############ Cleaning emp data #############
+emp3 <-emp
+nums <-unlist(lapply(emp3, is.numeric)) # numeric only col
+emp4 <-emp3[,nums] # include numeric
+emp5 <-emp4[,-1] # exclude ID
+emp6 <-emp5[, -which(names(emp5) %in% c("EmployeeCount","StandardHours"))]
+emp6_b<-emp6
+emp6 <-emp6[, -which(names(emp6) %in% c("JobLevel","TotalWorkingYears","PerformanceRating","YearsAtCompany","YearsInCurrentRole","YearsWithCurrManager"))]
+emp7 <-emp6
+emp7$Attrition<-emp3$Attrition
+# exclude JobLevel(corelate to monthlyIncome),"TotalWorkingYears"YearsAtCompany(corelate to age,YearsInCurrentRole,etc),
+# exclude ID,"EmployeeCount" 
+```
+
+## 3. Create Boxplot and correlation plots:
+
+```{r}
+#Boxplots
+library(reshape)
+emp7_box <- melt(emp7, id.var = "Attrition")
+p <- ggplot(data = emp7_box, aes(x=variable, y=value)) + geom_boxplot(aes(fill=Attrition))
+p + facet_wrap( ~ variable, scales="free")
+
+# check correlation between numeric variables BEFORE columns cleaning
+library(corrplot)
+correlations<-cor(emp6_b)
+corrplot(correlations,method="circle")
+# check correlation between numeric variables AFTER columns cleaning
+correlations<-cor(emp6)
+corrplot(correlations,method="circle")
+```
+
+## 4. Setting sample before running attrition prediction:
+
+```{r}
+############### set sample size ###############
+sample_size <- floor(0.60 * nrow(emp7))
+set.seed(123)
+
+###### set 60/40 sample #####
+train_ind <- sample(seq_len(nrow(emp7)), size = sample_size)
+train_emp7 <- emp7[train_ind, ]
+test_emp7 <- emp7[-train_ind, ]
+```
+
+## 5. Run Naive Bayes Model
+
+```{r}
+################### naive bayes:Attrition ##################
+library(e1071)
+library(caret)
+nb_classifier<-naiveBayes(train_emp7,train_emp7$Attrition)
+predicted<-predict(nb_classifier,test_emp7)
+confusionMatrix(predicted, test_emp7$Attrition)
+
+#Reference
+#Prediction  No Yes
+#No  291   1
+#Yes   0  56
+
+#Accuracy : 0.9971          
+#95% CI : (0.9841, 0.9999)
+#No Information Rate : 0.8362          
+#P-Value [Acc > NIR] : <2e-16          
+
+#Kappa : 0.9894          
+
+#Mcnemar's Test P-Value : 1               
+
+#            Sensitivity : 1.0000          
+#            Specificity : 0.9825     
+```
+
+## 6. Run Logistic Regression Model
+
+```{r}
+########### logistic ##########
+
+var=''
+for (i in (2:ncol(emp7)-1)){
+  #print(names(train_emp7)[i])
+  #print(i)
+  #print(names(train_emp7)[i])
+  if (i != 1){
+    var = paste(var,names(train_emp7)[i],sep='+')
+  } else {var=paste(var,names(train_emp7)[i])}
+}
+var=paste('Attrition~',var)
+fit_logit<-glm(var,data=train_emp7,family=binomial(logit))
+#predict_logit_train_n <- predict(fit_logit, newdata = train_emp7, type = "response")
+#predict_logit_train <- as.factor(ifelse(predict_logit_train_n > 0.5, 'Yes', 'No'))
+#confusionMatrix(predict_logit_train, train_emp7$Attrition)
+predict_logit_test_n <- predict(fit_logit, newdata = test_emp7, type = "response")
+predict_logit_test <- as.factor(ifelse(predict_logit_test_n > 0.5, 'Yes', 'No'))
+confusionMatrix(predict_logit_test, test_emp7$Attrition)
+
+#Reference
+#Prediction  No Yes
+#No  281  42
+#Yes  10  15
+
+#Accuracy : 0.8506          
+#95% CI : (0.8087, 0.8863)
+#No Information Rate : 0.8362          
+#P-Value [Acc > NIR] : 0.2603          
+
+#Kappa : 0.2955          
+
+#Mcnemar's Test P-Value : 1.716e-05       
+
+#            Sensitivity : 0.9656          
+#            Specificity : 0.2632  
+
+#******************************************
+```
+
+## 7 Clean data to prepare to run model to predict income
+
+```{r}
+############ Cleaning emp data ###########
+# do not remove job level because we are predicting income. 
+emp_income <-emp5[, -which(names(emp5) %in% c("EmployeeCount","StandardHours"))]
+# emp_income <-emp_income[, -which(names(emp_income) %in% c("TotalWorkingYears","PerformanceRating","YearsAtCompany","YearsInCurrentRole","YearsWithCurrManager"))]
+# include more columns, we will run by stepwise, forward, backward selection
+#names(emp_income)
+
+############### set sample size ###############
+sample_size <- floor(0.60 * nrow(emp_income))
+set.seed(123)
+
+###### set 60/40 sample #####
+train_ind <- sample(seq_len(nrow(emp_income)), size = sample_size)
+train_emp_income <- emp_income[train_ind, ]
+test_emp_income <- emp_income[-train_ind, ]
+```
+
+## 8 Run multiple regression models
+
+```{r}
+############## Regression: Predict Monthly Income ###################
+library(MASS)
+# full regression model
+full.model <- lm(MonthlyIncome ~., data = train_emp_income)
+summary(full.model)
+# Stepwise regression model
+step.model <- stepAIC(full.model, direction = "both", trace = FALSE)
+forward.model <- stepAIC(full.model, direction = "forward", trace = FALSE)
+backward.model <- stepAIC(full.model, direction = "backward", trace = FALSE)
+summary(step.model) #Adjusted R-Squared=0.918
+summary(forward.model) #Adjusted R-Squared=0.9168
+summary(backward.model) #Adjusted R-Squared=0.918
+
+step.RMSE <- sqrt(c(crossprod(step.model$residuals)) / length(step.model$residuals))
+step.RMSE #1327.915
+forward.RMSE <- sqrt(c(crossprod(forward.model$residuals)) / length(forward.model$residuals))
+forward.RMSE #1315.878
+backward.RMSE <- sqrt(c(crossprod(backward.model$residuals)) / length(backward.model$residuals))
+backward.RMSE #1327.878
+
+# use forward selection
+##plotting the model fit
+par(mfrow=c(2,2))
+plot(forward.model, which=c(1:3))
+
+##Store studentized residuals
+res_emp <- rstudent(forward.model)
+##Histogram
+hist(res_emp, freq=FALSE, main="Distribution of Studentized Residuals",xlab="Studentized Residuals", ylab="Density")
+##Create range of x-values for normal curve
+xfit2 <- seq(min(res_emp)-1, max(res_emp)+1, length=40)
+
+##Generate values from the normal distribution at the specified values
+yfit2 <- (dnorm(xfit2))
+
+##Add the normal curve
+lines(xfit2, yfit2, ylim=c(0,0.5))
+```
+
+## 9 Predict attrition and income and create output files
+
+```{r}
+#install.packages("readxl")
+library("readxl")
+
+emp_no_attrition = read.csv("/Users/wailunchung/Documents/GitHub/DS_6306_case_study_02/CaseStudy2CompSet No Attrition.csv",header = TRUE)
+emp_no_income <- read_excel("/Users/wailunchung/Documents/GitHub/DS_6306_case_study_02/CaseStudy2CompSet No Salary.xlsx")
+#summary(emp_no_income)
+
+# use the Naive Bayes model to predict the no attrition dataset
+predicted_comp<-predict(nb_classifier,emp_no_attrition)
+att_comp<-data.frame("ID" =emp_no_attrition$ID,"pred_Attrition"=predicted_comp)
+write.csv(att_comp,file='/Users/wailunchung/Documents/GitHub/DS_6306_case_study_02/output/Case2PredictionsChung Attrition.csv',row.names=FALSE)
+#att_comp
+
+# use the multiple regression model to predict the no salary dataset
+predicted_income<-predict(forward.model,emp_no_income)
+income_comp<-data.frame("ID" =emp_no_income$ID,"pred_MonthlyIncome"=predicted_income)
+write.csv(income_comp,file='/Users/wailunchung/Documents/GitHub/DS_6306_case_study_02/output/Case2PredictionsChung Salary.csv',row.names=FALSE)
+#income_comp
+
+```
+
+
+
