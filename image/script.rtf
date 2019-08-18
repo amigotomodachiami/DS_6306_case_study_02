@@ -1,0 +1,57 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\margl1440\margr1440\vieww15400\viewh19080\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Slide 1\
+Hi, my name is Joe. I am with DDSAnalytics. Thank you for the opportunity to present to you today. \
+\
+Slide 2\
+Our objective is to build predictive models to identify the employees who are likely to turnover and to predict employees income. The results will help decision making on the workforce planning. \
+\
+Slide 3\
+There are 3 departments in the organization. My preliminary discovery found that the Research and Sales department have a higher Attrition rate.\
+\
+Slide 4\
+Also, lab technician, research scientist, sales executive and sales rep, they have higher attrition rate. We should pay more attention to these department and job roles.\
+\
+Slide 5\
+Now I will walk you thru the process of building a predictive model for Attrition.\
+\
+Slide 6\
+In the employee dataset, it contains 870 employees\'92s records with 36 attributes. To build a robust predictive model, first we assume each predictive variable are conditionally independent. In this graph, the dark blue dots indicate the strong correlation between variables.\
+\
+Slide 7\
+We then remove the variables that are strongly correlated, after excluding the job level, performance rating, total working years, and other variables. The graph looks much better.\
+\
+Slide 8\
+We also compare the Attrition and each explanatory variable. we found age, distance from home, job satisfaction, monthly income, are highly correlated with Attrition.\
+\
+Slide 9\
+We randomly select 60% of the data to be training set and 40% to be test set. Then we run 2 different models and compare the results. In the Confusion Matrix, Naive Bayes model has higher accuracy and much higher Specificity than the logistic regression. Therefore, we select the Naive Bayes model. The accuracy of the model is 99.7%. The predicted Attrition can be found in our GitHub page.\
+\
+Slide 10\
+Now I will walk you thru the process of building a predictive model for monthly income. \
+\
+Slide 11\
+We are using the same training and test dataset. To select the variables to run Multiple Regression Model, we run models with stepwise, forward and backward selection methods and select the one with the lowest root mean square error. The results from the 3 methods are about the same. I pick the forward selection method since it has the lowest error. \
+\
+Slide 12\
+\pard\pardeftab720\sl340\partightenfactor0
+\cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Here are the variables we use to train our regression model. About 91.7% of the variance in the data can be explained by these predictors. \
+\
+Slide 13\
+The p value is less than 0.001, so the regression model significantly predicts monthly income. \
+\
+Slide 14\
+In conclusion, the data suggests that \cf2 \outl0\strokewidth0 the attrition rate of \cf2 \outl0\strokewidth0 \strokec2 Sales Department and Technical job roles are higher. I suggest we can allocate more resources in this area. \
+The attrition rate is highly correlated with the distance from home, job satisfaction and monthly income.\
+Our attrition predictive model achieve 99.7% accuracy. We can prevent turnover by reaching out to employee individually. \
+Our monthly income regression model significantly predicts income. The model will give you a better idea of how offer should be made when hiring new employee and adjust income to increase retention.\
+\
+Slide 15\
+Thank you for taking the time to review the analysis with me. All document are available on our GitHub page. Please feel free to reach out to us if you have any question. \
+}
