@@ -399,3 +399,5 @@ knnreg.predict3 <- predict(fit3,TestTX[,c(1,2)])
 
 fit5=knnreg(x= TrainingTX[,c(1,2)],y= TrainingTX$ABV,k= 5)
 knnreg.predict5 <- predict(fit5,TestTX[,c(1,2)])
+
+#https://github.com/amigotomodachiami/DS_6306_case_study_02.git
